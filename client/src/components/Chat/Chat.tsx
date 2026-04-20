@@ -10,10 +10,18 @@ interface Message {
   timestamp: Date;
 }
 
+interface SavedMessage {
+  id: number;
+  text: string;
+  sender: 'user' | 'assistant';
+  timestamp: string;
+}
+
 function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -26,12 +34,13 @@ function Chat() {
     if (savedMessages) {
       try {
         const parsed = JSON.parse(savedMessages);
-        const messagesWithDates = parsed.map((msg: any) => ({
+        const messagesWithDates = parsed.map((msg: SavedMessage) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp)
+          timestamp: new Date(msg.timestamp),
         }));
         setMessages(messagesWithDates);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Ошибка загрузки истории:', e);
       }
     }
@@ -54,7 +63,7 @@ function Chat() {
       id: Date.now(),
       text: inputText,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -64,38 +73,53 @@ function Chat() {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:3001/api/chat', {
-        message: currentMessage
-      }, {
-        timeout: 60000
-      });
+      const response = await axios.post(
+        'http://localhost:3001/api/chat',
+        {
+          message: currentMessage,
+        },
+        {
+          timeout: 60000,
+        }
+      );
 
       const assistantMessage: Message = {
         id: Date.now() + 1,
         text: response.data.reply,
         sender: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error: any) {
+    } catch (rawError) {
+      const error = rawError as Error & {
+        response?: {
+          data?: { error?: string };
+          statusText?: string;
+        };
+        request?: unknown;
+        code?: string;
+      };
+      // eslint-disable-next-line no-console
       console.error('Ошибка при отправке:', error);
-      
-      let errorText = 'Извините, произошла ошибка. Пожалуйста, попробуйте позже.';
-      
+
+      let errorText =
+        'Извините, произошла ошибка. Пожалуйста, попробуйте позже.';
+
       if (error.code === 'ECONNABORTED') {
         errorText = 'Превышено время ожидания ответа от сервера.';
       } else if (error.response) {
         errorText = `Ошибка сервера: ${error.response.data?.error || error.response.statusText}`;
       } else if (error.request) {
-        errorText = 'Сервер не отвечает. Убедитесь, что сервер запущен на порту 3001.';
+        errorText =
+          'Сервер не отвечает. Убедитесь, что сервер запущен на порту 3001.';
       }
-      
+
       const errorMessage: Message = {
         id: Date.now() + 1,
         text: errorText,
         sender: 'assistant',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
       setError(errorText);
@@ -118,21 +142,28 @@ function Chat() {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   const MessageText = ({ text, sender }: { text: string; sender: string }) => {
     const isUser = sender === 'user';
-    
+
     return (
-      <div className={`message-text ${isUser ? 'user-message-text' : 'assistant-message-text'} markdown-body`}>
+      <div
+        className={`message-text ${isUser ? 'user-message-text' : 'assistant-message-text'} markdown-body`}
+      >
         <ReactMarkdown
           components={{
             h1: ({ children }) => <h1 className="md-h1">{children}</h1>,
             h2: ({ children }) => <h2 className="md-h2">{children}</h2>,
             h3: ({ children }) => <h3 className="md-h3">{children}</h3>,
             p: ({ children }) => <p className="md-p">{children}</p>,
-            strong: ({ children }) => <strong className="md-strong">{children}</strong>,
+            strong: ({ children }) => (
+              <strong className="md-strong">{children}</strong>
+            ),
             em: ({ children }) => <em className="md-em">{children}</em>,
             ul: ({ children }) => <ul className="md-ul">{children}</ul>,
             ol: ({ children }) => <ol className="md-ol">{children}</ol>,
@@ -140,12 +171,19 @@ function Chat() {
             code: ({ children }) => <code className="md-code">{children}</code>,
             pre: ({ children }) => <pre className="md-pre">{children}</pre>,
             a: ({ href, children }) => (
-              <a href={href} className="md-link" target="_blank" rel="noopener noreferrer">
+              <a
+                href={href}
+                className="md-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {children}
               </a>
             ),
             ...(isUser && {
-              strong: ({ children }) => <strong className="md-strong-user">{children}</strong>,
+              strong: ({ children }) => (
+                <strong className="md-strong-user">{children}</strong>
+              ),
             }),
           }}
         >
@@ -172,7 +210,7 @@ function Chat() {
               <p>Задайте мне любой вопрос, и я постараюсь помочь!</p>
             </div>
           ) : (
-            messages.map((message) => (
+            messages.map(message => (
               <div
                 key={message.id}
                 className={`message ${message.sender === 'user' ? 'user-message' : 'assistant-message'}`}
@@ -180,28 +218,30 @@ function Chat() {
                 <div className="message-avatar">
                   {/* лого пользователя с сайта Т-банка */}
                   {message.sender === 'user' ? (
-                    <img 
-                      src="https://cdn.tbank.ru/static/pages/files/96e5e7d8-8143-49c5-ac99-4411c030b90c.svg" 
-                      alt="User Avatar" 
+                    <img
+                      src="https://cdn.tbank.ru/static/pages/files/96e5e7d8-8143-49c5-ac99-4411c030b90c.svg"
+                      alt="User Avatar"
                       className="avatar-img"
                     />
                   ) : (
                     // лого т банка с сайта Т-банка, отвечает за гпт именно
-                    <img 
-                      src="https://cdn.tbank.ru/static/pfa-multimedia/images/1251baa4-02ab-4e6f-9bd6-8f8444bfa726.svg" 
-                      alt="Bot Avatar" 
+                    <img
+                      src="https://cdn.tbank.ru/static/pfa-multimedia/images/1251baa4-02ab-4e6f-9bd6-8f8444bfa726.svg"
+                      alt="Bot Avatar"
                       className="avatar-img"
                     />
                   )}
                 </div>
                 <div className="message-content">
                   <MessageText text={message.text} sender={message.sender} />
-                  <div className="message-time">{formatTime(message.timestamp)}</div>
+                  <div className="message-time">
+                    {formatTime(message.timestamp)}
+                  </div>
                 </div>
               </div>
             ))
           )}
-          
+
           {isLoading && (
             <div className="message assistant-message typing">
               <div className="message-avatar"></div>
@@ -214,21 +254,21 @@ function Chat() {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
         <div className="input-container">
           <textarea
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={e => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Введите ваше сообщение..."
             disabled={isLoading}
             rows={3}
           />
-          <button 
-            onClick={sendMessage} 
+          <button
+            onClick={sendMessage}
             disabled={!inputText.trim() || isLoading}
             className="send-btn"
           >

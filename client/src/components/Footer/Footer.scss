@@ -27,7 +27,7 @@
   font-weight: 500;
   transition: color 0.2s ease;
   white-space: nowrap;
-  
+
   &:hover {
     color: #428bf9;
   }
@@ -45,7 +45,7 @@
   color: #428bf9;
   text-decoration: none;
   font-weight: 500;
-  
+
   &:hover {
     text-decoration: underline;
   }
@@ -72,11 +72,11 @@
     width: 90%;
     padding: 16px 0;
   }
-  
+
   .footer-link {
     white-space: normal;
   }
-  
+
   .footer-copyright {
     white-space: normal;
   }
@@ -87,29 +87,29 @@
     width: 100%;
     padding: 16px 20px;
   }
-  
+
   .footer-links {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .footer-support {
     padding: 8px 0;
     text-align: left;
   }
-  
+
   .footer-bottom {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .footer-link,
   .footer-support,
   .footer-copyright {
     font-size: 0.8rem;
     white-space: normal;
-    display: flex
+    display: flex;
   }
 }
 
