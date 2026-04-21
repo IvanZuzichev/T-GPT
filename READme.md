@@ -25,6 +25,15 @@
 
 Если ваша компания заинтересована в сотрудничестве или хотите задать вопросы — свяжитесь со мной. Буду рад диалогу!
 
+## Внещний вид
+
+<p align="center">
+  <img src="client\src\assets\PhotoEmpty.png" width="80%" />
+</p>
+<p align="center">
+  <img src="client\src\assets\Photo.png" width="80%" />
+</p>
+
 
 ## Функционал
 
